@@ -4,7 +4,8 @@ import javax.media.j3d.*;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Created by yannick on 28/01/16.
@@ -15,14 +16,20 @@ public class PointCloud {
 	private PointArray m_pointArray;
 	private Appearance m_pointAppearance;
 	private BranchGroup m_bg = new BranchGroup();
+	private Random m_random = new Random();
 
 	public static PointCloud create(int count, BoundingVolume boundingVolume) {
 		return new PointCloud(count, boundingVolume, 3, true);
 	}
 
+	private double nextDouble(double rangeMin, double rangeMax) {
+		return (rangeMin + (rangeMax - rangeMin) * m_random.nextDouble());
+	}
+
 	public PointCloud(int count, BoundingVolume boundingVolume, int pointSize, boolean aliased) {
 		m_count = count;
 		m_points = new ArrayList<Point3d>();
+		m_random.setSeed(12345);
 
 		m_pointArray = new PointArray(m_count, PointArray.COORDINATES | PointArray.COLOR_3);
 		for (int i=0; i < m_count; i++) {
@@ -31,9 +38,10 @@ public class PointCloud {
 				pt = boundingVolume.getPointInVolume();
 			} else {
 				pt = new Point3d(
-						ThreadLocalRandom.current().nextDouble(-1, 1),
-						ThreadLocalRandom.current().nextDouble(-1, 1),
-						ThreadLocalRandom.current().nextDouble(-1, 1)
+						nextDouble(-1, 1),
+						nextDouble(-1, 1),
+//						nextDouble(-1, 1)
+						0
 				);
 			}
 			m_points.add(i, pt);
@@ -60,6 +68,10 @@ public class PointCloud {
 
 	public Point3d get(int i) {
 		return m_points.get(i);
+	}
+
+	public List<Point3d> getPoints() {
+		return m_points;
 	}
 
 	public int size() {

@@ -7,12 +7,14 @@ import javax.vecmath.Vector3d;
  * Created by yannick on 09.12.16.
  */
 class Triangle {
+	public int m_id;
 	public Circle m_circumpherence = null;
 	public Point3d m_p1;
 	public Point3d m_p2;
 	public Point3d m_p3;
 
-	public Triangle(Point3d p1, Point3d p2, Point3d p3) {
+	public Triangle(int id, Point3d p1, Point3d p2, Point3d p3) {
+		m_id = id;
 		m_p1 = p1;
 		m_p2 = p2;
 		m_p3 = p3;
@@ -61,6 +63,19 @@ class Triangle {
 				);
 
 		return new Circle(circumsphereCenter, circumsphereRadius);
+	}
+
+	@Override
+	public String toString () {
+		return String.format("Triangle-%d: (%.5f, %.5f) / (%.5f, %.5f) / (%.5f, %.5f)",
+				m_id,
+				m_p1.x, m_p1.y,
+				m_p2.x, m_p2.y,
+				m_p3.x, m_p3.y);
+//		return String.format("Triangle: (%.5f, %.5f, %.5f) / (%.5f, %.5f, %.5f) / (%.5f, %.5f, %.5f)",
+//				m_p1.x, m_p1.y, m_p1.z,
+//				m_p2.x, m_p2.y, m_p2.z,
+//				m_p3.x, m_p3.y, m_p3.z);
 	}
 }
 

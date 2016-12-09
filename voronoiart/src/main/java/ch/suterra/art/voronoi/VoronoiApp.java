@@ -52,7 +52,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		objTransform.addChild(pointCloud.toNode());
 
 		DelaunayTriangulation triangles = new DelaunayTriangulation(pointCloud);
-		objTransform.addChild(triangles.toNode());
+		objTransform.addChild(triangles.toNode(true));
 
 		compileSceneGraph();
 
@@ -112,7 +112,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		myMouseZoom.setSchedulingBounds(bounds);
 
 		Transform3D transform = new Transform3D();
-		transform.setScale(.5);
+		transform.setScale(1);
 		objTransform.setTransform(transform);
 
 		objRoot.addChild(myMouseRotate);

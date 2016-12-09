@@ -4,7 +4,7 @@ import sun.jvm.hotspot.utilities.Assert;
 
 import javax.media.j3d.*;
 import javax.vecmath.Point3d;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 /**
  * Created by yannick on 28/01/16.
@@ -15,12 +15,14 @@ public class BoundingVolume {
 	private QuadArray m_shapeData;
 	private Appearance m_appearance;
 	private BranchGroup m_bg = new BranchGroup();
+	private Random m_random = new Random();
 
 	public static BoundingVolume createCube(double size) {
 		return new BoundingVolume(size, 1, 1, 1, true);
 	}
 
 	public BoundingVolume(double sizeX, double sizeY, double sizeZ, int lineSize, boolean aliased) {
+		m_random.setSeed(12345);
 		m_sizeX = sizeX;
 		double coordX = m_sizeX / 2f;
 		m_sizeY = sizeY;
@@ -75,11 +77,16 @@ public class BoundingVolume {
 		m_bg.addChild(pointShape);
 	}
 
+	private double nextDouble(double rangeMin, double rangeMax) {
+		return (rangeMin + (rangeMax - rangeMin) * m_random.nextDouble());
+	}
+
 	public Point3d getPointInVolume() {
 		Point3d pt = new Point3d(
-				ThreadLocalRandom.current().nextDouble(-m_sizeX / 2f, m_sizeX / 2f),
-				ThreadLocalRandom.current().nextDouble(-m_sizeY / 2f, m_sizeY / 2f),
-				ThreadLocalRandom.current().nextDouble(-m_sizeZ / 2f, m_sizeZ / 2f));
+				nextDouble(-m_sizeX / 2f, m_sizeX / 2f),
+				nextDouble(-m_sizeY / 2f, m_sizeY / 2f),
+//				nextDouble(-m_sizeZ / 2f, m_sizeZ / 2f));
+				0);
 		Assert.that(m_boundingBox.intersect(pt), "Newly generated point is OUTSIDE volume.");
 		return pt;
 	}

@@ -2,6 +2,10 @@
 
 #Ignore build targets
 voronoiart/target/
+voronoiart/src/main/java/ch/suterra/math/
+
+#Ignore intellij configs:wq
+voronoiart/.idea
 
 # Package Files #
 *.jar

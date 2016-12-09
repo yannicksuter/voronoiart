@@ -1,6 +1,7 @@
 package ch.suterra.art.voronoi;
 
 import ch.suterra.art.voronoi.assets.BoundingVolume;
+import ch.suterra.art.voronoi.assets.DelaunayTriangulation;
 import ch.suterra.art.voronoi.assets.PointCloud;
 import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
 import com.sun.j3d.utils.behaviors.mouse.MouseTranslate;
@@ -42,13 +43,17 @@ public class VoronoiApp extends JFrame implements KeyListener {
 
 		// setup content
 		boundingVolume = BoundingVolume.createCube(1);
-		pointCloud = PointCloud.create(100, boundingVolume);
+		pointCloud = PointCloud.create(3, boundingVolume);
 
 		createSceneGraph();
 		addBackground(objRoot);
 
 		objTransform.addChild(boundingVolume.toNode());
 		objTransform.addChild(pointCloud.toNode());
+
+		DelaunayTriangulation triangles = new DelaunayTriangulation(pointCloud);
+		objTransform.addChild(triangles.toNode());
+
 		compileSceneGraph();
 
 		universe.addBranchGraph(objRoot);

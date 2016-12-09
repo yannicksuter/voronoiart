@@ -57,4 +57,12 @@ public class PointCloud {
 	public Node toNode() {
 		return m_bg;
 	}
+
+	public Point3d get(int i) {
+		return m_points.get(i);
+	}
+
+	public int size() {
+		return m_points.size();
+	}
 }

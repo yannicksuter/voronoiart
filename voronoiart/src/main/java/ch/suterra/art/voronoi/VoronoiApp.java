@@ -25,7 +25,6 @@ public class VoronoiApp extends JFrame implements KeyListener {
 	private BranchGroup objRoot;
 	private TransformGroup objTransform;
 
-	// voronoi vase
 	private BoundingVolume boundingVolume;
 	private PointCloud pointCloud;
 

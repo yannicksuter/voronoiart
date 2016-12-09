@@ -17,21 +17,25 @@ public class PointCloud {
 	private BranchGroup m_bg = new BranchGroup();
 
 	public static PointCloud create(int count, BoundingVolume boundingVolume) {
-		return new PointCloud(count, 3, true);
+		return new PointCloud(count, boundingVolume, 3, true);
 	}
 
-	public PointCloud(int count, int pointSize, boolean aliased) {
+	public PointCloud(int count, BoundingVolume boundingVolume, int pointSize, boolean aliased) {
 		m_count = count;
 		m_points = new ArrayList<Point3d>();
 
 		m_pointArray = new PointArray(m_count, PointArray.COORDINATES | PointArray.COLOR_3);
 		for (int i=0; i < m_count; i++) {
-			double random = ThreadLocalRandom.current().nextDouble(-1, 1);
-			Point3d pt = new Point3d(
-					ThreadLocalRandom.current().nextDouble(-1, 1),
-					ThreadLocalRandom.current().nextDouble(-1, 1),
-					ThreadLocalRandom.current().nextDouble(-1, 1)
-			);
+			Point3d pt;
+			if (boundingVolume != null) {
+				pt = boundingVolume.getPointInVolume();
+			} else {
+				pt = new Point3d(
+						ThreadLocalRandom.current().nextDouble(-1, 1),
+						ThreadLocalRandom.current().nextDouble(-1, 1),
+						ThreadLocalRandom.current().nextDouble(-1, 1)
+				);
+			}
 			m_points.add(i, pt);
 			m_pointArray.setCoordinate(i, pt);
 			m_pointArray.setColor(i, new Color3f(1,1,1));

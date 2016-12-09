@@ -12,12 +12,14 @@ import javax.swing.*;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
 
 /**
  * Created by yannick on 21/01/16.
  */
-public class VoronoiApp extends JFrame {
+public class VoronoiApp extends JFrame implements KeyListener {
 	private Canvas3D canvas;
 	private SimpleUniverse universe;
 	private BranchGroup objRoot;
@@ -40,19 +42,13 @@ public class VoronoiApp extends JFrame {
 		conigureUniverse();
 
 		// setup content
-		boundingVolume = BoundingVolume.createCube(0.2);
+		boundingVolume = BoundingVolume.createCube(1);
 		pointCloud = PointCloud.create(100, boundingVolume);
 
 		createSceneGraph();
 		addBackground(objRoot);
 
-//		BranchGroup boxBranch = new BranchGroup();
-//		boxBranch.setCapability(BranchGroup.ALLOW_DETACH);
-//		Box box = new Box();
-//		boxBranch.addChild(box);
-//		objRoot.addChild(boxBranch);
-
-//		objTransform.addChild(boundingVolume.toNode());
+		objTransform.addChild(boundingVolume.toNode());
 		objTransform.addChild(pointCloud.toNode());
 		compileSceneGraph();
 
@@ -63,7 +59,7 @@ public class VoronoiApp extends JFrame {
 
 	private void configureWindow() {
 		setTitle("Voronoi3D");
-		setSize(800, 600);
+		setSize(1024, 768);
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int locationX = (screenSize.width - getWidth()) / 2;
 		int locationY = (screenSize.height - getHeight()) / 2;
@@ -81,6 +77,7 @@ public class VoronoiApp extends JFrame {
 		System.out.printf("cv.queryProperties().get(\"sceneAntialiasingNumPasses\"): %s\n",canvas.queryProperties().get("sceneAntialiasingNumPasses"));
 
 		getContentPane().add(canvas, BorderLayout.CENTER);
+		canvas.addKeyListener(this);
 	}
 
 	private void conigureUniverse() {
@@ -99,17 +96,23 @@ public class VoronoiApp extends JFrame {
 
 		MouseRotate myMouseRotate = new MouseRotate();
 		myMouseRotate.setTransformGroup(objTransform);
-		myMouseRotate.setSchedulingBounds(new BoundingSphere());
-		objRoot.addChild(myMouseRotate);
-
 		MouseTranslate myMouseTranslate = new MouseTranslate();
 		myMouseTranslate.setTransformGroup(objTransform);
-		myMouseTranslate.setSchedulingBounds(new BoundingSphere());
-		objRoot.addChild(myMouseTranslate);
-
 		MouseZoom myMouseZoom = new MouseZoom();
 		myMouseZoom.setTransformGroup(objTransform);
-		myMouseZoom.setSchedulingBounds(new BoundingSphere());
+
+		BoundingSphere bounds = new BoundingSphere();
+		bounds.setRadius(1.0);
+		myMouseRotate.setSchedulingBounds(bounds);
+		myMouseTranslate.setSchedulingBounds(bounds);
+		myMouseZoom.setSchedulingBounds(bounds);
+
+		Transform3D transform = new Transform3D();
+		transform.setScale(.5);
+		objTransform.setTransform(transform);
+
+		objRoot.addChild(myMouseRotate);
+		objRoot.addChild(myMouseTranslate);
 		objRoot.addChild(myMouseZoom);
 
 		return objRoot;
@@ -130,6 +133,23 @@ public class VoronoiApp extends JFrame {
 			new VoronoiApp().setVisible(true);
 		} catch (IOException ex) {
 			ex.printStackTrace();
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent ke) {
+		//do nothing yet
+	}
+
+	@Override
+	public void keyPressed(KeyEvent ke) {
+		//do nothing yet
+	}
+
+	@Override
+	public void keyReleased(KeyEvent ke) {
+		if (ke.getKeyCode() == KeyEvent.VK_ESCAPE) {
+			System.exit(0);
 		}
 	}
 }

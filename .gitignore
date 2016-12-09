@@ -5,6 +5,7 @@ voronoiart/target/
 voronoiart/src/main/java/ch/suterra/math/
 
 #Ignore intellij configs:wq
+*.iml
 voronoiart/.idea
 
 # Package Files #

@@ -42,8 +42,9 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		conigureUniverse();
 
 		// setup content
-		boundingVolume = BoundingVolume.createCube(1);
-		pointCloud = PointCloud.create(5, boundingVolume);
+		long seed = System.currentTimeMillis();
+		boundingVolume = BoundingVolume.createCube(1, seed);
+		pointCloud = PointCloud.create(30, boundingVolume);
 
 		createSceneGraph();
 		addBackground(objRoot);
@@ -51,8 +52,14 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		objTransform.addChild(boundingVolume.toNode());
 		objTransform.addChild(pointCloud.toNode());
 
+		long startTime = System.currentTimeMillis();
 		DelaunayTriangulation triangles = new DelaunayTriangulation(pointCloud);
-		objTransform.addChild(triangles.toNode(true));
+		long stopTime = System.currentTimeMillis();
+		long elapsedTime = stopTime - startTime;
+		System.out.printf("time: %dms\n", elapsedTime);
+
+		System.out.printf("Triangles generated: %d\n", triangles.size());
+		objTransform.addChild(triangles.toNode(false));
 
 		compileSceneGraph();
 

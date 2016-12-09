@@ -1,5 +1,7 @@
 package ch.suterra.art.voronoi.assets;
 
+import sun.jvm.hotspot.utilities.Assert;
+
 import javax.media.j3d.*;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
@@ -27,23 +29,14 @@ public class PointCloud {
 	}
 
 	public PointCloud(int count, BoundingVolume boundingVolume, int pointSize, boolean aliased) {
+		Assert.that(boundingVolume != null, "Bounding volume needed!");
 		m_count = count;
 		m_points = new ArrayList<Point3d>();
 		m_random.setSeed(12345);
 
 		m_pointArray = new PointArray(m_count, PointArray.COORDINATES | PointArray.COLOR_3);
 		for (int i=0; i < m_count; i++) {
-			Point3d pt;
-			if (boundingVolume != null) {
-				pt = boundingVolume.getPointInVolume();
-			} else {
-				pt = new Point3d(
-						nextDouble(-1, 1),
-						nextDouble(-1, 1),
-//						nextDouble(-1, 1)
-						0
-				);
-			}
+			Point3d pt = boundingVolume.getPointInVolume();
 			m_points.add(i, pt);
 			m_pointArray.setCoordinate(i, pt);
 			m_pointArray.setColor(i, new Color3f(1,1,1));

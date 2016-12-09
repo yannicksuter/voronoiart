@@ -1,7 +1,5 @@
 package ch.suterra.art.voronoi.assets;
 
-import sun.jvm.hotspot.utilities.Assert;
-
 import javax.media.j3d.*;
 import javax.vecmath.Color4f;
 import javax.vecmath.Point3d;
@@ -14,46 +12,32 @@ public class DelaunayTriangulation {
 	private TriangleArray m_shapeData;
 	private Appearance m_appearance;
 	private BranchGroup m_bg = new BranchGroup();
-	private ArrayList<Triangle> m_triangles;
+	private ArrayList<Triangle> m_triangles = new ArrayList<Triangle>();
 	private int triangleId = 0;
 
 	public DelaunayTriangulation(PointCloud points) {
-		Assert.that(points.size() >= 3, "Minimal number of points to triangulate is 3.");
-		m_triangles = new ArrayList<Triangle>();
 		// create initial triangle
 		m_triangles.add(new Triangle(triangleId++, points.get(0), points.get(1), points.get(2)));
-		System.out.printf("add: %s\n", m_triangles.get(0).toString());
-		// add all additional points restructure the triangulation for cavities
 		for (int i=3; i<points.size(); i++) {
 			addPoint(i, points);
 		}
 	}
 
 	private void addPoint(int nextId, PointCloud points) {
-		int id = 0;
-		Point3d pt = points.get(nextId);
-//		System.out.printf("new point: %d / (%.5f, %.5f, %.5f)\n", nextId, pt.x, pt.y, pt.z);
-		System.out.printf("new point: %d / (%.5f, %.5f)\n", nextId, pt.x, pt.y);
-		Triangle tConflict = locate(points.get(nextId));
-		if (tConflict != null) {
-			System.out.printf("del: %s\n", tConflict.toString());
-			m_triangles.remove(tConflict);
-			id = tConflict.m_id;
+		ArrayList<Triangle> tConflict = locate(points.get(nextId));
+		if (tConflict.size() > 0) {
+			m_triangles.removeAll(tConflict);
 		}
 		// generate new triangles
 		ArrayList<Triangle> queue = new ArrayList<Triangle>();
 		List<Set<Integer>> res = Permutation.createPermutations(nextId);
 		for (Set<Integer> s : res) {
+			s.add(nextId);
 			Integer[] IDs = s.toArray(new Integer[s.size()]);
-			Triangle t = new Triangle(triangleId++, points.get(IDs[0]), points.get(IDs[1]), points.get(nextId));
-//			if (locate(points.get(nextId)) == null) {
+			Triangle t = new Triangle(triangleId++, points.get(IDs[0]), points.get(IDs[1]), points.get(IDs[2]));
 			if (!checkInclusion(t, points, s)) {
-				System.out.printf("add: %s\n", t.toString());
 				queue.add(t);
 			}
-		}
-		if (id == 2) {
-			m_triangles.clear();
 		}
 		m_triangles.addAll(queue);
 	}
@@ -67,16 +51,21 @@ public class DelaunayTriangulation {
 		return false;
 	}
 
-	private Triangle locate(Point3d p) {
+	private ArrayList<Triangle> locate(Point3d p) {
+		ArrayList<Triangle> queue = new ArrayList<Triangle>();
 		for (Triangle t : m_triangles) {
 			if (t.m_circumpherence.inside(p)) {
-				return t;
+				queue.add(t);
 			}
 		}
-		return null;
+		return queue;
 	}
 
 	public Node toNode(boolean showCircumpherences) {
+		if (m_triangles.size() == 0) {
+			return null;
+		}
+
 		m_shapeData = new TriangleArray(m_triangles.size()*3, TriangleArray.COORDINATES|TriangleArray.COLOR_4);
 		for (int i=0; i<m_triangles.size(); i++) {
 			int ii = i*3;
@@ -105,5 +94,9 @@ public class DelaunayTriangulation {
 			}
 		}
 		return m_bg;
+	}
+
+	public int size() {
+		return m_triangles.size();
 	}
 }

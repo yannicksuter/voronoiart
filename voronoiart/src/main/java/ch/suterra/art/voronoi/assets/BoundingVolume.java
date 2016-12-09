@@ -17,12 +17,12 @@ public class BoundingVolume {
 	private BranchGroup m_bg = new BranchGroup();
 	private Random m_random = new Random();
 
-	public static BoundingVolume createCube(double size) {
-		return new BoundingVolume(size, 1, 1, 1, true);
+	public static BoundingVolume createCube(double size, long seed) {
+		return new BoundingVolume(size, 1, 1, 1, true, seed);
 	}
 
-	public BoundingVolume(double sizeX, double sizeY, double sizeZ, int lineSize, boolean aliased) {
-		m_random.setSeed(12345);
+	public BoundingVolume(double sizeX, double sizeY, double sizeZ, int lineSize, boolean aliased, long seed) {
+		m_random.setSeed(seed);
 		m_sizeX = sizeX;
 		double coordX = m_sizeX / 2f;
 		m_sizeY = sizeY;
@@ -85,8 +85,8 @@ public class BoundingVolume {
 		Point3d pt = new Point3d(
 				nextDouble(-m_sizeX / 2f, m_sizeX / 2f),
 				nextDouble(-m_sizeY / 2f, m_sizeY / 2f),
-//				nextDouble(-m_sizeZ / 2f, m_sizeZ / 2f));
-				0);
+				nextDouble(-m_sizeZ / 2f, m_sizeZ / 2f));
+//				0);
 		Assert.that(m_boundingBox.intersect(pt), "Newly generated point is OUTSIDE volume.");
 		return pt;
 	}

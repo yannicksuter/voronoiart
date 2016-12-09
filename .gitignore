@@ -8,6 +8,9 @@ voronoiart/src/main/java/ch/suterra/math/
 *.iml
 voronoiart/.idea
 
+#Ignore osx left overs
+.DS_Store
+
 # Package Files #
 *.jar
 *.war

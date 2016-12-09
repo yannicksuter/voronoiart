@@ -7,7 +7,7 @@ import javax.vecmath.Vector3d;
  * Created by yannick on 09.12.16.
  */
 class Triangle {
-	public Circle m_circumcenter = null;
+	public Circle m_circumpherence = null;
 	public Point3d m_p1;
 	public Point3d m_p2;
 	public Point3d m_p3;
@@ -16,7 +16,7 @@ class Triangle {
 		m_p1 = p1;
 		m_p2 = p2;
 		m_p3 = p3;
-		m_circumcenter = GetCircumcenter(p1, p2, p3);
+		m_circumpherence = GetCircumcenter(p1, p2, p3);
 	}
 
 //	static public Point3d Midpoint(Point3d a, Point3d b) {

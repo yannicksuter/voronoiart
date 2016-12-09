@@ -43,7 +43,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 
 		// setup content
 		boundingVolume = BoundingVolume.createCube(1);
-		pointCloud = PointCloud.create(3, boundingVolume);
+		pointCloud = PointCloud.create(5, boundingVolume);
 
 		createSceneGraph();
 		addBackground(objRoot);

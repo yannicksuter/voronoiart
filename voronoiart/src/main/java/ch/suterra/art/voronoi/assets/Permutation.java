@@ -14,7 +14,7 @@ public class Permutation {
 		return calcPermutations(s);
 	}
 
-	private static List<Set<Integer>> calcPermutations(Set<Integer> myset) {
+	public static List<Set<Integer>> calcPermutations(Set<Integer> myset) {
 		int n = myset.size();
 		Integer[] myInts = new Integer[n];
 		Iterator<Integer> iterator = myset.iterator();

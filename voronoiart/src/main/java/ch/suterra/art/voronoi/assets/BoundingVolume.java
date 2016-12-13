@@ -4,6 +4,8 @@ import sun.jvm.hotspot.utilities.Assert;
 
 import javax.media.j3d.*;
 import javax.vecmath.Point3d;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -93,5 +95,24 @@ public class BoundingVolume {
 
 	public Node toNode() {
 		return m_bg;
+	}
+
+	public List<Point3d> getEdgeVertices() {
+		double coordX = m_sizeX / 2f;
+		double coordY = m_sizeY / 2f;
+		double coordZ = m_sizeZ / 2f;
+		Point3d[] shapeEdges = {
+			new Point3d(-coordX, coordY, coordZ),
+			new Point3d(coordX, coordY, coordZ),
+			new Point3d(coordX, coordY, -coordZ),
+			new Point3d(-coordX, coordY, -coordZ),
+
+			new Point3d(-coordX, -coordY, coordZ),
+			new Point3d(coordX, -coordY, coordZ),
+			new Point3d(coordX, -coordY, -coordZ),
+			new Point3d(-coordX, -coordY, -coordZ),
+		};
+
+		return Arrays.asList(shapeEdges);
 	}
 }

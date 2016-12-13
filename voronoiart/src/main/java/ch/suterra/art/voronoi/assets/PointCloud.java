@@ -7,7 +7,6 @@ import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by yannick on 28/01/16.
@@ -18,28 +17,28 @@ public class PointCloud {
 	private PointArray m_pointArray;
 	private Appearance m_pointAppearance;
 	private BranchGroup m_bg = new BranchGroup();
-	private Random m_random = new Random();
 
-	public static PointCloud create(int count, BoundingVolume boundingVolume) {
-		return new PointCloud(count, boundingVolume, 3, true);
+	public static PointCloud create(int count, BoundingVolume boundingVolume, boolean addBoundingEdges) {
+		return new PointCloud(count, boundingVolume, 3, addBoundingEdges, true);
 	}
 
-	private double nextDouble(double rangeMin, double rangeMax) {
-		return (rangeMin + (rangeMax - rangeMin) * m_random.nextDouble());
-	}
-
-	public PointCloud(int count, BoundingVolume boundingVolume, int pointSize, boolean aliased) {
+	public PointCloud(int count, BoundingVolume boundingVolume, int pointSize, boolean addBoundingEdges, boolean aliased) {
 		Assert.that(boundingVolume != null, "Bounding volume needed!");
-		m_count = count;
-		m_points = new ArrayList<Point3d>();
-		m_random.setSeed(12345);
 
+		m_points = new ArrayList<Point3d>();
+		for (int i=0; i < count; i++) {
+			m_points.add(boundingVolume.getPointInVolume());
+		}
+		if (addBoundingEdges) {
+			m_points.addAll(boundingVolume.getEdgeVertices());
+		}
+
+		m_count = m_points.size();
 		m_pointArray = new PointArray(m_count, PointArray.COORDINATES | PointArray.COLOR_3);
-		for (int i=0; i < m_count; i++) {
-			Point3d pt = boundingVolume.getPointInVolume();
-			m_points.add(i, pt);
-			m_pointArray.setCoordinate(i, pt);
-			m_pointArray.setColor(i, new Color3f(1,1,1));
+		for (int id = 0; id < m_points.size(); id++) {
+			Point3d pt = m_points.get(id);
+			m_pointArray.setCoordinate(id, pt);
+			m_pointArray.setColor(id, new Color3f(1, 1, 1));
 		}
 
 		m_pointArray.setCapability(GeometryArray.ALLOW_COLOR_WRITE);

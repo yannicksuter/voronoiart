@@ -37,14 +37,15 @@ public class VoronoiApp extends JFrame implements KeyListener {
 	}
 
 	public VoronoiApp() throws IOException {
-		configureWindow();
+		long seed = System.currentTimeMillis() % 10000;
+
+		configureWindow(seed);
 		configureCanvas();
 		conigureUniverse();
 
 		// setup content
-		long seed = System.currentTimeMillis();
 		boundingVolume = BoundingVolume.createCube(1, seed);
-		pointCloud = PointCloud.create(30, boundingVolume);
+		pointCloud = PointCloud.create(1, boundingVolume, true);
 
 		createSceneGraph();
 		addBackground(objRoot);
@@ -54,6 +55,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 
 		long startTime = System.currentTimeMillis();
 		DelaunayTriangulation triangles = new DelaunayTriangulation(pointCloud);
+
 		long stopTime = System.currentTimeMillis();
 		long elapsedTime = stopTime - startTime;
 		System.out.printf("time: %dms\n", elapsedTime);
@@ -68,8 +70,8 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		canvas.getView().setSceneAntialiasingEnable(true);
 	}
 
-	private void configureWindow() {
-		setTitle("Voronoi3D");
+	private void configureWindow(long seed) {
+		setTitle(String.format("Voronoi3D [seed:%d]", seed));
 		setSize(1024, 768);
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int locationX = (screenSize.width - getWidth()) / 2;

@@ -49,7 +49,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 
 		// setup content
 		boundingVolume = BoundingVolume.createCube(1, seed);
-		pointCloud = PointCloud.create(1, boundingVolume, true);
+		pointCloud = PointCloud.create(10, boundingVolume, true);
 
 		createSceneGraph();
 		addBackground(objRoot);
@@ -61,6 +61,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		DelaunayTriangulation triangles = new DelaunayTriangulation(pointCloud);
 
 		exportSCAD(triangles, pointCloud, seed, "result");
+		System.exit(0);
 
 		long stopTime = System.currentTimeMillis();
 		long elapsedTime = stopTime - startTime;
@@ -155,21 +156,17 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		Vector3d dir = new Vector3d(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
 
 		double r = dir.length();
-		double t = Math.atan(dir.y / dir.x);
-		double p = Math.acos(dir.z / r);
-
-		double alpha = Math.atan(dir.x/dir.z);
-		if (dir.z > 0) {
-			alpha += Math.PI;
+		double alpha = Math.acos(dir.y/r);
+		double beta = Math.atan(dir.x / dir.z);
+		if (dir.z < 0) {
+			beta += Math.PI;
 		}
-		double beta = Math.acos(dir.y/r) + (Math.PI*.5f);
-
 
 		out.write(String.format("translate([%f,%f,%f])", p0.x * scale, p0.y * scale, p0.z * scale));
 		out.write("\n\t");
-		out.write(String.format("rotate([%f,%f,%f])", Math.toDegrees(alpha), Math.toDegrees(beta), 0.f));
+		out.write(String.format("rotate([%f,%f,%f])", -90 + Math.toDegrees(alpha), Math.toDegrees(beta), 0.f));
 		out.write("\n\t");
-		out.write(String.format("cylinder(h = %f, r1 = %d, r2 = %d, center = false, $fn = %d);\n", r*scale, radius, radius>>1, resolution));
+		out.write(String.format("cylinder(h = %f, r1 = %d, r2 = %d, center = false, $fn = %d);\n", r*scale, radius, radius, resolution));
 	}
 
 	private void exportSCAD(DelaunayTriangulation triangles, PointCloud points, long seed, String namePrefix) throws IOException {
@@ -181,25 +178,33 @@ public class VoronoiApp extends JFrame implements KeyListener {
 			FileWriter fstream = new FileWriter(home + "/" + namePrefix + String.valueOf(nameSuffix) + ".scad", false);
 			out = new BufferedWriter(fstream);
 
-			int radius = 2;
+			int radius = 1;
 			int resolution = 20;
-			float scale = 10;
+			float scale = 100;
 
-			if (false) {
+			if (true) {
 				for (int i=0; i<points.size(); i++) {
 					Point3d point = points.get(i);
 					writePoint(out, point, scale, radius, resolution);
 				}
 
-				for (int i = 0; i </*triangles.size()*/1; i++) {
+				for (int i = 0; i < triangles.size(); i++) {
 					Triangle triangle = triangles.get(i);
 					writeLine(out, triangle.m_p1, triangle.m_p2, scale, radius, resolution);
 					writeLine(out, triangle.m_p2, triangle.m_p3, scale, radius, resolution);
 					writeLine(out, triangle.m_p3, triangle.m_p1, scale, radius, resolution);
 				}
 			} else {
-				Point3d p0 = new Point3d(-1,-1,-1);
-				Point3d p1 = new Point3d(1,1,1);
+//				triangle.m_p1 = {javax.vecmath.Point3d@2179} "(0.22487624176788013, 0.2695553612824789, -0.08235790196630377)"
+				Point3d p0 = new Point3d(-0.5, 0.5, 0.5);
+				Point3d p1 = new Point3d(0.5, 0.5, 0.5);
+
+//				triangle.m_p2 = {javax.vecmath.Point3d@2177} "(-0.5, 0.5, 0.5)"
+//				triangle.m_p3 = {javax.vecmath.Point3d@2178} "(0.5, 0.5, 0.5)"
+//				triangle.m_p1 = {javax.vecmath.Point3d@2179} "(0.4048451578603197, -0.34513675150628476, 0.19012234871573386)"
+
+//				Point3d p1 = new Point3d(-1,-1,-1);
+//				Point3d p0 = new Point3d(1,1,1);
 				writePoint(out, p0, scale, radius, resolution);
 				writePoint(out, p1, scale, radius, resolution);
 				writeLine(out, p0, p1, scale, radius, resolution);

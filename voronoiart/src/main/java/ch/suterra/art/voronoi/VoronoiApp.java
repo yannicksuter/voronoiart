@@ -20,6 +20,8 @@ import java.awt.event.KeyListener;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by yannick on 21/01/16.
@@ -169,6 +171,8 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		out.write(String.format("cylinder(h = %f, r1 = %d, r2 = %d, center = false, $fn = %d);\n", r*scale, radius, radius, resolution));
 	}
 
+
+
 	private void exportSCAD(DelaunayTriangulation triangles, PointCloud points, long seed, String namePrefix) throws IOException {
 		BufferedWriter out = null;
 		try {
@@ -188,12 +192,27 @@ public class VoronoiApp extends JFrame implements KeyListener {
 					writePoint(out, point, scale, radius, resolution);
 				}
 
+				int lines = 0;
+				Set<String> index = new HashSet<String>();
 				for (int i = 0; i < triangles.size(); i++) {
 					Triangle triangle = triangles.get(i);
-					writeLine(out, triangle.m_p1, triangle.m_p2, scale, radius, resolution);
-					writeLine(out, triangle.m_p2, triangle.m_p3, scale, radius, resolution);
-					writeLine(out, triangle.m_p3, triangle.m_p1, scale, radius, resolution);
+					if (!index.contains(String.format("%d-%d", triangle.m_id1, triangle.m_id2)) && !index.contains(String.format("%d-%d", triangle.m_id2, triangle.m_id1))) {
+						writeLine(out, triangle.m_p1, triangle.m_p2, scale, radius, resolution);
+						index.add(String.format("%d-%d", triangle.m_id1, triangle.m_id2));
+						lines++;
+					}
+					if (!index.contains(String.format("%d-%d", triangle.m_id2, triangle.m_id3)) && !index.contains(String.format("%d-%d", triangle.m_id3, triangle.m_id2))) {
+						writeLine(out, triangle.m_p2, triangle.m_p3, scale, radius, resolution);
+						index.add(String.format("%d-%d", triangle.m_id2, triangle.m_id3));
+						lines++;
+					}
+					if (!index.contains(String.format("%d-%d", triangle.m_id3, triangle.m_id1)) && !index.contains(String.format("%d-%d", triangle.m_id1, triangle.m_id3))) {
+						writeLine(out, triangle.m_p3, triangle.m_p1, scale, radius, resolution);
+						index.add(String.format("%d-%d", triangle.m_id3, triangle.m_id1));
+						lines++;
+					}
 				}
+				System.out.println(String.format("%d lines exported.", lines));
 			} else {
 //				triangle.m_p1 = {javax.vecmath.Point3d@2179} "(0.22487624176788013, 0.2695553612824789, -0.08235790196630377)"
 				Point3d p0 = new Point3d(-0.5, 0.5, 0.5);

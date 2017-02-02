@@ -17,7 +17,7 @@ public class DelaunayTriangulation {
 
 	public DelaunayTriangulation(PointCloud points) {
 		// create initial triangle
-		m_triangles.add(new Triangle(triangleId++, points.get(0), points.get(1), points.get(2)));
+		m_triangles.add(new Triangle(triangleId++, 0, points.get(0), 1, points.get(1), 2, points.get(2)));
 		for (int i=3; i<points.size(); i++) {
 			addPoint(i, points);
 		}
@@ -34,7 +34,7 @@ public class DelaunayTriangulation {
 		for (Set<Integer> s : res) {
 			s.add(nextId);
 			Integer[] IDs = s.toArray(new Integer[s.size()]);
-			Triangle t = new Triangle(triangleId++, points.get(IDs[0]), points.get(IDs[1]), points.get(IDs[2]));
+			Triangle t = new Triangle(triangleId++, IDs[0], points.get(IDs[0]), IDs[1], points.get(IDs[1]), IDs[2], points.get(IDs[2]));
 			if (!checkInclusion(t, points, s)) {
 				queue.add(t);
 			}
@@ -72,7 +72,7 @@ public class DelaunayTriangulation {
 			m_shapeData.setCoordinate(ii+0, m_triangles.get(i).m_p1);
 			m_shapeData.setColor(ii+0, new Color4f(1,0,0,.5f));
 			m_shapeData.setCoordinate(ii+1, m_triangles.get(i).m_p2);
-			m_shapeData.setColor(i*3+1, new Color4f(1,0,0,.5f));
+			m_shapeData.setColor(ii+1, new Color4f(1,0,0,.5f));
 			m_shapeData.setCoordinate(ii+2, m_triangles.get(i).m_p3);
 			m_shapeData.setColor(ii+2, new Color4f(1,0,0,.5f));
 		}
@@ -94,6 +94,10 @@ public class DelaunayTriangulation {
 			}
 		}
 		return m_bg;
+	}
+
+	public Triangle get(int i) {
+		return m_triangles.get(i);
 	}
 
 	public int size() {

@@ -6,28 +6,26 @@ import javax.vecmath.Vector3d;
 /**
  * Created by yannick on 09.12.16.
  */
-class Triangle {
+public class Triangle {
 	public int m_id;
 	public Circle m_circumpherence = null;
+	public int m_id1;
 	public Point3d m_p1;
+	public int m_id2;
 	public Point3d m_p2;
+	public int m_id3;
 	public Point3d m_p3;
 
-	public Triangle(int id, Point3d p1, Point3d p2, Point3d p3) {
-		m_id = id;
+	public Triangle(int triangleId, int id1, Point3d p1, int id2, Point3d p2, int id3, Point3d p3) {
+		m_id = triangleId;
+		m_id1 = id1;
+		m_id2 = id2;
+		m_id3 = id3;
 		m_p1 = p1;
 		m_p2 = p2;
 		m_p3 = p3;
 		m_circumpherence = GetCircumcenter(p1, p2, p3);
 	}
-
-//	static public Point3d Midpoint(Point3d a, Point3d b) {
-//		return new Point3d(
-//				(a.x + b.x) / 2,
-//				(a.y + b.y) / 2,
-//				(a.z + b.z) / 2)
-//		);
-//	}
 
 //	ac = c - a ;
 //	ab = b - a ;
@@ -67,15 +65,10 @@ class Triangle {
 
 	@Override
 	public String toString () {
-		return String.format("Triangle-%d: (%.5f, %.5f) / (%.5f, %.5f) / (%.5f, %.5f)",
-				m_id,
-				m_p1.x, m_p1.y,
-				m_p2.x, m_p2.y,
-				m_p3.x, m_p3.y);
-//		return String.format("Triangle: (%.5f, %.5f, %.5f) / (%.5f, %.5f, %.5f) / (%.5f, %.5f, %.5f)",
-//				m_p1.x, m_p1.y, m_p1.z,
-//				m_p2.x, m_p2.y, m_p2.z,
-//				m_p3.x, m_p3.y, m_p3.z);
+		return String.format("Triangle: (%.5f, %.5f, %.5f) / (%.5f, %.5f, %.5f) / (%.5f, %.5f, %.5f)",
+				m_p1.x, m_p1.y, m_p1.z,
+				m_p2.x, m_p2.y, m_p2.z,
+				m_p3.x, m_p3.y, m_p3.z);
 	}
 }
 

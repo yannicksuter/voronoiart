@@ -3,6 +3,7 @@ package ch.suterra.art.voronoi;
 import ch.suterra.art.voronoi.assets.BoundingVolume;
 import ch.suterra.art.voronoi.assets.DelaunayTriangulation;
 import ch.suterra.art.voronoi.assets.PointCloud;
+import ch.suterra.art.voronoi.assets.Triangle;
 import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
 import com.sun.j3d.utils.behaviors.mouse.MouseTranslate;
 import com.sun.j3d.utils.behaviors.mouse.MouseZoom;
@@ -12,9 +13,12 @@ import javax.media.j3d.*;
 import javax.swing.*;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 
 /**
@@ -31,7 +35,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 
 	private void addBackground(BranchGroup objRoot) {
 		Background bg = new Background(new Color3f(.5f, .5f, .5f));
-		BoundingSphere bounds = new BoundingSphere(new Point3d(0.0, 0.0, 0.0),100.0);
+		BoundingSphere bounds = new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0);
 		bg.setApplicationBounds(bounds);
 		objRoot.addChild(bg);
 	}
@@ -56,6 +60,8 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		long startTime = System.currentTimeMillis();
 		DelaunayTriangulation triangles = new DelaunayTriangulation(pointCloud);
 
+		exportSCAD(triangles, pointCloud, seed, "result");
+
 		long stopTime = System.currentTimeMillis();
 		long elapsedTime = stopTime - startTime;
 		System.out.printf("time: %dms\n", elapsedTime);
@@ -76,18 +82,18 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int locationX = (screenSize.width - getWidth()) / 2;
 		int locationY = (screenSize.height - getHeight()) / 2;
-		setLocation(locationX,locationY);
+		setLocation(locationX, locationY);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
 	private void configureCanvas() {
-		GraphicsConfigTemplate3D gct3D= new GraphicsConfigTemplate3D();
+		GraphicsConfigTemplate3D gct3D = new GraphicsConfigTemplate3D();
 		gct3D.setSceneAntialiasing(GraphicsConfigTemplate3D.REQUIRED);
-		GraphicsConfiguration gc= java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getBestConfiguration(gct3D);
+		GraphicsConfiguration gc = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getBestConfiguration(gct3D);
 		canvas = new Canvas3D(gc);
 
-		System.out.printf("cv.getSceneAntialiasingAvailable(): %s\n",canvas.getSceneAntialiasingAvailable());
-		System.out.printf("cv.queryProperties().get(\"sceneAntialiasingNumPasses\"): %s\n",canvas.queryProperties().get("sceneAntialiasingNumPasses"));
+		System.out.printf("cv.getSceneAntialiasingAvailable(): %s\n", canvas.getSceneAntialiasingAvailable());
+		System.out.printf("cv.queryProperties().get(\"sceneAntialiasingNumPasses\"): %s\n", canvas.queryProperties().get("sceneAntialiasingNumPasses"));
 
 		getContentPane().add(canvas, BorderLayout.CENTER);
 		canvas.addKeyListener(this);
@@ -137,6 +143,76 @@ public class VoronoiApp extends JFrame implements KeyListener {
 			return true;
 		}
 		return false;
+	}
+
+	private void writePoint(BufferedWriter out, Point3d point, float scale, int radius, int resolution) throws IOException {
+		out.write(String.format("translate([%f,%f,%f])", point.x*scale, point.y*scale, point.z*scale));
+		out.write("\n\t");
+		out.write(String.format("sphere(r = %d, center = true, $fn = %d);\n", radius, resolution));
+	}
+
+	private void writeLine(BufferedWriter out, Point3d p0, Point3d p1, float scale, int radius, int resolution) throws IOException {
+		Vector3d dir = new Vector3d(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
+
+		double r = dir.length();
+		double t = Math.atan(dir.y / dir.x);
+		double p = Math.acos(dir.z / r);
+
+		double alpha = Math.atan(dir.x/dir.z);
+		if (dir.z > 0) {
+			alpha += Math.PI;
+		}
+		double beta = Math.acos(dir.y/r) + (Math.PI*.5f);
+
+
+		out.write(String.format("translate([%f,%f,%f])", p0.x * scale, p0.y * scale, p0.z * scale));
+		out.write("\n\t");
+		out.write(String.format("rotate([%f,%f,%f])", Math.toDegrees(alpha), Math.toDegrees(beta), 0.f));
+		out.write("\n\t");
+		out.write(String.format("cylinder(h = %f, r1 = %d, r2 = %d, center = false, $fn = %d);\n", r*scale, radius, radius>>1, resolution));
+	}
+
+	private void exportSCAD(DelaunayTriangulation triangles, PointCloud points, long seed, String namePrefix) throws IOException {
+		BufferedWriter out = null;
+		try {
+//			int nameSuffix = (int) ((new java.util.Date()).getTime()/1000);
+			int nameSuffix = 0;
+			String home = System.getProperty("user.home");
+			FileWriter fstream = new FileWriter(home + "/" + namePrefix + String.valueOf(nameSuffix) + ".scad", false);
+			out = new BufferedWriter(fstream);
+
+			int radius = 2;
+			int resolution = 20;
+			float scale = 10;
+
+			if (false) {
+				for (int i=0; i<points.size(); i++) {
+					Point3d point = points.get(i);
+					writePoint(out, point, scale, radius, resolution);
+				}
+
+				for (int i = 0; i </*triangles.size()*/1; i++) {
+					Triangle triangle = triangles.get(i);
+					writeLine(out, triangle.m_p1, triangle.m_p2, scale, radius, resolution);
+					writeLine(out, triangle.m_p2, triangle.m_p3, scale, radius, resolution);
+					writeLine(out, triangle.m_p3, triangle.m_p1, scale, radius, resolution);
+				}
+			} else {
+				Point3d p0 = new Point3d(-1,-1,-1);
+				Point3d p1 = new Point3d(1,1,1);
+				writePoint(out, p0, scale, radius, resolution);
+				writePoint(out, p1, scale, radius, resolution);
+				writeLine(out, p0, p1, scale, radius, resolution);
+			}
+		}
+		catch (IOException e) {
+			System.err.println("Error: " + e.getMessage());
+		}
+		finally {
+			if (out != null) {
+				out.close();
+			}
+		}
 	}
 
 	// MAIN ********************************************************************

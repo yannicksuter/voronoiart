@@ -186,48 +186,32 @@ public class VoronoiApp extends JFrame implements KeyListener {
 			int resolution = 20;
 			float scale = 100;
 
-			if (true) {
-				for (int i=0; i<points.size(); i++) {
-					Point3d point = points.get(i);
-					writePoint(out, point, scale, radius, resolution);
-				}
-
-				int lines = 0;
-				Set<String> index = new HashSet<String>();
-				for (int i = 0; i < triangles.size(); i++) {
-					Triangle triangle = triangles.get(i);
-					if (!index.contains(String.format("%d-%d", triangle.m_id1, triangle.m_id2)) && !index.contains(String.format("%d-%d", triangle.m_id2, triangle.m_id1))) {
-						writeLine(out, triangle.m_p1, triangle.m_p2, scale, radius, resolution);
-						index.add(String.format("%d-%d", triangle.m_id1, triangle.m_id2));
-						lines++;
-					}
-					if (!index.contains(String.format("%d-%d", triangle.m_id2, triangle.m_id3)) && !index.contains(String.format("%d-%d", triangle.m_id3, triangle.m_id2))) {
-						writeLine(out, triangle.m_p2, triangle.m_p3, scale, radius, resolution);
-						index.add(String.format("%d-%d", triangle.m_id2, triangle.m_id3));
-						lines++;
-					}
-					if (!index.contains(String.format("%d-%d", triangle.m_id3, triangle.m_id1)) && !index.contains(String.format("%d-%d", triangle.m_id1, triangle.m_id3))) {
-						writeLine(out, triangle.m_p3, triangle.m_p1, scale, radius, resolution);
-						index.add(String.format("%d-%d", triangle.m_id3, triangle.m_id1));
-						lines++;
-					}
-				}
-				System.out.println(String.format("%d lines exported.", lines));
-			} else {
-//				triangle.m_p1 = {javax.vecmath.Point3d@2179} "(0.22487624176788013, 0.2695553612824789, -0.08235790196630377)"
-				Point3d p0 = new Point3d(-0.5, 0.5, 0.5);
-				Point3d p1 = new Point3d(0.5, 0.5, 0.5);
-
-//				triangle.m_p2 = {javax.vecmath.Point3d@2177} "(-0.5, 0.5, 0.5)"
-//				triangle.m_p3 = {javax.vecmath.Point3d@2178} "(0.5, 0.5, 0.5)"
-//				triangle.m_p1 = {javax.vecmath.Point3d@2179} "(0.4048451578603197, -0.34513675150628476, 0.19012234871573386)"
-
-//				Point3d p1 = new Point3d(-1,-1,-1);
-//				Point3d p0 = new Point3d(1,1,1);
-				writePoint(out, p0, scale, radius, resolution);
-				writePoint(out, p1, scale, radius, resolution);
-				writeLine(out, p0, p1, scale, radius, resolution);
+			for (int i=0; i<points.size(); i++) {
+				Point3d point = points.get(i);
+				writePoint(out, point, scale, radius, resolution);
 			}
+
+			int lines = 0;
+			Set<String> index = new HashSet<String>();
+			for (int i = 0; i < triangles.size(); i++) {
+				Triangle triangle = triangles.get(i);
+				if (!index.contains(String.format("%d-%d", triangle.m_id1, triangle.m_id2)) && !index.contains(String.format("%d-%d", triangle.m_id2, triangle.m_id1))) {
+					writeLine(out, triangle.m_p1, triangle.m_p2, scale, radius, resolution);
+					index.add(String.format("%d-%d", triangle.m_id1, triangle.m_id2));
+					lines++;
+				}
+				if (!index.contains(String.format("%d-%d", triangle.m_id2, triangle.m_id3)) && !index.contains(String.format("%d-%d", triangle.m_id3, triangle.m_id2))) {
+					writeLine(out, triangle.m_p2, triangle.m_p3, scale, radius, resolution);
+					index.add(String.format("%d-%d", triangle.m_id2, triangle.m_id3));
+					lines++;
+				}
+				if (!index.contains(String.format("%d-%d", triangle.m_id3, triangle.m_id1)) && !index.contains(String.format("%d-%d", triangle.m_id1, triangle.m_id3))) {
+					writeLine(out, triangle.m_p3, triangle.m_p1, scale, radius, resolution);
+					index.add(String.format("%d-%d", triangle.m_id3, triangle.m_id1));
+					lines++;
+				}
+			}
+			System.out.println(String.format("%d lines exported.", lines));
 		}
 		catch (IOException e) {
 			System.err.println("Error: " + e.getMessage());

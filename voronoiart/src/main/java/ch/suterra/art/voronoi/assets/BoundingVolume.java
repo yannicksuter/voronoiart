@@ -19,6 +19,19 @@ public class BoundingVolume {
 	private BranchGroup m_bg = new BranchGroup();
 	private Random m_random = new Random();
 
+	private int m_partitionIndex = 0;
+	Point3d[] m_partitions = {
+			new Point3d(-1, 1, 1),
+			new Point3d(1, 1, 1),
+			new Point3d(1, 1, -1),
+			new Point3d(-1, 1, -1),
+
+			new Point3d(-1, -1, 1),
+			new Point3d(1, -1, 1),
+			new Point3d(1, -1, -1),
+			new Point3d(-1, -1, -1),
+	};
+
 	public static BoundingVolume createCube(double size, long seed) {
 		return new BoundingVolume(size, 1, 1, 1, true, seed);
 	}
@@ -83,12 +96,30 @@ public class BoundingVolume {
 		return (rangeMin + (rangeMax - rangeMin) * m_random.nextDouble());
 	}
 
-	public Point3d getPointInVolume() {
-		Point3d pt = new Point3d(
+	private double nextPartitionedDouble(double rangeMin, double rangeMax, double partitionSide) {
+		// -X .. X -> -X .. 0 || 0 .. X
+		if (partitionSide == -1) {
+			rangeMax = 0;
+		} else {
+			rangeMin = 0;
+		}
+		return (rangeMin + (rangeMax - rangeMin) * m_random.nextDouble());
+	}
+
+	public Point3d getPointInVolume(boolean partitionedDistribution) {
+		Point3d pt = null;
+		if (partitionedDistribution) {
+			pt = new Point3d(
+					nextPartitionedDouble(-m_sizeX / 2f, m_sizeX / 2f, m_partitions[m_partitionIndex].x),
+					nextPartitionedDouble(-m_sizeY / 2f, m_sizeY / 2f, m_partitions[m_partitionIndex].y),
+					nextPartitionedDouble(-m_sizeZ / 2f, m_sizeZ / 2f, m_partitions[m_partitionIndex].z));
+			m_partitionIndex = (m_partitionIndex+1) % m_partitions.length;
+		} else {
+			pt = new Point3d(
 				nextDouble(-m_sizeX / 2f, m_sizeX / 2f),
 				nextDouble(-m_sizeY / 2f, m_sizeY / 2f),
 				nextDouble(-m_sizeZ / 2f, m_sizeZ / 2f));
-//				0);
+		}
 		Assert.that(m_boundingBox.intersect(pt), "Newly generated point is OUTSIDE volume.");
 		return pt;
 	}

@@ -4,6 +4,7 @@ import ch.suterra.art.voronoi.assets.BoundingVolume;
 import ch.suterra.art.voronoi.assets.DelaunayTriangulation;
 import ch.suterra.art.voronoi.assets.PointCloud;
 import ch.suterra.art.voronoi.assets.Triangle;
+import ch.suterra.art.voronoi.ui.VoronoiConfig;
 import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
 import com.sun.j3d.utils.behaviors.mouse.MouseTranslate;
 import com.sun.j3d.utils.behaviors.mouse.MouseZoom;
@@ -35,6 +36,9 @@ public class VoronoiApp extends JFrame implements KeyListener {
 	private BoundingVolume boundingVolume;
 	private PointCloud pointCloud;
 
+	private int m_particleCount = 10;
+	private boolean m_partitionedDistribution = true;
+
 	private void addBackground(BranchGroup objRoot) {
 		Background bg = new Background(new Color3f(.5f, .5f, .5f));
 		BoundingSphere bounds = new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0);
@@ -51,7 +55,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 
 		// setup content
 		boundingVolume = BoundingVolume.createCube(1, seed);
-		pointCloud = PointCloud.create(10, boundingVolume, true);
+		pointCloud = PointCloud.create(m_particleCount, m_partitionedDistribution, boundingVolume, true);
 
 		createSceneGraph();
 		addBackground(objRoot);
@@ -63,7 +67,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		DelaunayTriangulation triangles = new DelaunayTriangulation(pointCloud);
 
 		exportSCAD(triangles, pointCloud, seed, "result");
-		System.exit(0);
+//		System.exit(0);
 
 		long stopTime = System.currentTimeMillis();
 		long elapsedTime = stopTime - startTime;
@@ -99,7 +103,10 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		System.out.printf("cv.queryProperties().get(\"sceneAntialiasingNumPasses\"): %s\n", canvas.queryProperties().get("sceneAntialiasingNumPasses"));
 
 		getContentPane().add(canvas, BorderLayout.CENTER);
+		getContentPane().addKeyListener(this);
 		canvas.addKeyListener(this);
+
+		getContentPane().add(new VoronoiConfig(this), BorderLayout.EAST);
 	}
 
 	private void conigureUniverse() {
@@ -171,8 +178,6 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		out.write(String.format("cylinder(h = %f, r1 = %d, r2 = %d, center = false, $fn = %d);\n", r*scale, radius, radius, resolution));
 	}
 
-
-
 	private void exportSCAD(DelaunayTriangulation triangles, PointCloud points, long seed, String namePrefix) throws IOException {
 		BufferedWriter out = null;
 		try {
@@ -183,7 +188,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 			out = new BufferedWriter(fstream);
 
 			int radius = 1;
-			int resolution = 20;
+			int resolution = 10;
 			float scale = 100;
 
 			for (int i=0; i<points.size(); i++) {

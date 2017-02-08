@@ -18,17 +18,18 @@ public class PointCloud {
 	private Appearance m_pointAppearance;
 	private BranchGroup m_bg = new BranchGroup();
 
-	public static PointCloud create(int count, BoundingVolume boundingVolume, boolean addBoundingEdges) {
-		return new PointCloud(count, boundingVolume, 3, addBoundingEdges, true);
+	public static PointCloud create(int count, boolean partitionedDistribution, BoundingVolume boundingVolume, boolean addBoundingEdges) {
+		return new PointCloud(count, partitionedDistribution, boundingVolume, 3, addBoundingEdges, true);
 	}
 
-	public PointCloud(int count, BoundingVolume boundingVolume, int pointSize, boolean addBoundingEdges, boolean aliased) {
+	public PointCloud(int count, boolean partitionedDistribution, BoundingVolume boundingVolume, int pointSize, boolean addBoundingEdges, boolean aliased) {
 		Assert.that(boundingVolume != null, "Bounding volume needed!");
 
 		m_points = new ArrayList<Point3d>();
 		for (int i=0; i < count; i++) {
-			m_points.add(boundingVolume.getPointInVolume());
+			m_points.add(boundingVolume.getPointInVolume(partitionedDistribution));
 		}
+
 		if (addBoundingEdges) {
 			m_points.addAll(boundingVolume.getEdgeVertices());
 		}

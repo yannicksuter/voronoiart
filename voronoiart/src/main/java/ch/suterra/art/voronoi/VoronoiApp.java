@@ -4,6 +4,7 @@ import ch.suterra.art.voronoi.assets.BoundingVolume;
 import ch.suterra.art.voronoi.assets.DelaunayTriangulation;
 import ch.suterra.art.voronoi.assets.PointCloud;
 import ch.suterra.art.voronoi.assets.Triangle;
+import ch.suterra.art.voronoi.ui.GlobalKeyDispatcher;
 import ch.suterra.art.voronoi.ui.VoronoiConfig;
 import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
 import com.sun.j3d.utils.behaviors.mouse.MouseTranslate;
@@ -16,8 +17,6 @@ import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -27,64 +26,33 @@ import java.util.Set;
 /**
  * Created by yannick on 21/01/16.
  */
-public class VoronoiApp extends JFrame implements KeyListener {
-	private Canvas3D canvas;
-	private SimpleUniverse universe;
-	private BranchGroup objRoot;
-	private TransformGroup objTransform;
+public class VoronoiApp extends JFrame {
+	private Canvas3D m_canvas;
+	private SimpleUniverse m_universe;
+	private BranchGroup m_objRoot;
+	private TransformGroup m_objTransform;
 
-	private BoundingVolume boundingVolume;
-	private PointCloud pointCloud;
+	private long m_seed;
+	private BoundingVolume m_boundingVolume;
+	private PointCloud m_pointCloud;
+	private DelaunayTriangulation m_triangles;
 
 	private int m_particleCount = 10;
 	private boolean m_partitionedDistribution = true;
 
-	private void addBackground(BranchGroup objRoot) {
-		Background bg = new Background(new Color3f(.5f, .5f, .5f));
-		BoundingSphere bounds = new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0);
-		bg.setApplicationBounds(bounds);
-		objRoot.addChild(bg);
-	}
-
 	public VoronoiApp() throws IOException {
-		long seed = System.currentTimeMillis() % 10000;
-
-		configureWindow(seed);
+		configureWindow();
 		configureCanvas();
 		conigureUniverse();
 
-		// setup content
-		boundingVolume = BoundingVolume.createCube(1, seed);
-		pointCloud = PointCloud.create(m_particleCount, m_partitionedDistribution, boundingVolume, true);
+		GlobalKeyDispatcher.initialize();
 
-		createSceneGraph();
-		addBackground(objRoot);
-
-		objTransform.addChild(boundingVolume.toNode());
-		objTransform.addChild(pointCloud.toNode());
-
-		long startTime = System.currentTimeMillis();
-		DelaunayTriangulation triangles = new DelaunayTriangulation(pointCloud);
-
-		exportSCAD(triangles, pointCloud, seed, "result");
-//		System.exit(0);
-
-		long stopTime = System.currentTimeMillis();
-		long elapsedTime = stopTime - startTime;
-		System.out.printf("time: %dms\n", elapsedTime);
-
-		System.out.printf("Triangles generated: %d\n", triangles.size());
-		objTransform.addChild(triangles.toNode(false));
-
-		compileSceneGraph();
-
-		universe.addBranchGraph(objRoot);
-
-		canvas.getView().setSceneAntialiasingEnable(true);
+		generateSeed(null);
+		generateGraph();
 	}
 
-	private void configureWindow(long seed) {
-		setTitle(String.format("Voronoi3D [seed:%d]", seed));
+	private void configureWindow() {
+		setTitle(String.format("Voronoi3D"));
 		setSize(1024, 768);
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int locationX = (screenSize.width - getWidth()) / 2;
@@ -97,38 +65,38 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		GraphicsConfigTemplate3D gct3D = new GraphicsConfigTemplate3D();
 		gct3D.setSceneAntialiasing(GraphicsConfigTemplate3D.REQUIRED);
 		GraphicsConfiguration gc = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getBestConfiguration(gct3D);
-		canvas = new Canvas3D(gc);
+		m_canvas = new Canvas3D(gc);
 
-		System.out.printf("cv.getSceneAntialiasingAvailable(): %s\n", canvas.getSceneAntialiasingAvailable());
-		System.out.printf("cv.queryProperties().get(\"sceneAntialiasingNumPasses\"): %s\n", canvas.queryProperties().get("sceneAntialiasingNumPasses"));
+		System.out.printf("cv.getSceneAntialiasingAvailable(): %s\n", m_canvas.getSceneAntialiasingAvailable());
+		System.out.printf("cv.queryProperties().get(\"sceneAntialiasingNumPasses\"): %s\n", m_canvas.queryProperties().get("sceneAntialiasingNumPasses"));
 
-		getContentPane().add(canvas, BorderLayout.CENTER);
-		getContentPane().addKeyListener(this);
-		canvas.addKeyListener(this);
-
+		getContentPane().add(m_canvas, BorderLayout.CENTER);
 		getContentPane().add(new VoronoiConfig(this), BorderLayout.EAST);
 	}
 
 	private void conigureUniverse() {
-		universe = new SimpleUniverse(canvas);
-		universe.getViewingPlatform().setNominalViewingTransform();
+		m_universe = new SimpleUniverse(m_canvas);
+		m_universe.getViewingPlatform().setNominalViewingTransform();
+		m_canvas.getView().setSceneAntialiasingEnable(true);
 	}
 
-	public BranchGroup createSceneGraph() {
-		objRoot = new BranchGroup();
+	public void createSceneGraph() {
+		m_objRoot = new BranchGroup();
+		m_objRoot.setCapability(BranchGroup.ALLOW_DETACH);
 
-		objTransform = new TransformGroup();
-		objTransform.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		objTransform.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);
-
-		objRoot.addChild(objTransform);
+		m_objTransform = new TransformGroup();
+		m_objTransform.setCapability(Group.ALLOW_CHILDREN_EXTEND);
+		m_objTransform.setCapability(Group.ALLOW_CHILDREN_WRITE);
+		m_objTransform.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		m_objTransform.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);
+		m_objRoot.addChild(m_objTransform);
 
 		MouseRotate myMouseRotate = new MouseRotate();
-		myMouseRotate.setTransformGroup(objTransform);
+		myMouseRotate.setTransformGroup(m_objTransform);
 		MouseTranslate myMouseTranslate = new MouseTranslate();
-		myMouseTranslate.setTransformGroup(objTransform);
+		myMouseTranslate.setTransformGroup(m_objTransform);
 		MouseZoom myMouseZoom = new MouseZoom();
-		myMouseZoom.setTransformGroup(objTransform);
+		myMouseZoom.setTransformGroup(m_objTransform);
 
 		BoundingSphere bounds = new BoundingSphere();
 		bounds.setRadius(1.0);
@@ -138,21 +106,67 @@ public class VoronoiApp extends JFrame implements KeyListener {
 
 		Transform3D transform = new Transform3D();
 		transform.setScale(1);
-		objTransform.setTransform(transform);
+		m_objTransform.setTransform(transform);
 
-		objRoot.addChild(myMouseRotate);
-		objRoot.addChild(myMouseTranslate);
-		objRoot.addChild(myMouseZoom);
+		m_objRoot.addChild(myMouseRotate);
+		m_objRoot.addChild(myMouseTranslate);
+		m_objRoot.addChild(myMouseZoom);
 
-		return objRoot;
+		Background bg = new Background(new Color3f(.5f, .5f, .5f));
+		BoundingSphere boundsBG = new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0);
+		bg.setApplicationBounds(boundsBG);
+		m_objRoot.addChild(bg);
 	}
 
-	protected boolean compileSceneGraph() {
-		if (objRoot != null) {
-			objRoot.compile();
-			return true;
+	public void generateSeed(Long s) {
+		if (s != null) {
+			m_seed = s;
+		} else {
+			m_seed = System.currentTimeMillis() % 10000;
 		}
-		return false;
+		setTitle(String.format("Voronoi3D [seed:%d]", m_seed));
+	}
+
+	public int getParticleCount() {
+		return m_particleCount;
+	}
+
+	public void setParticleCount(int count) {
+		m_particleCount = count;
+	}
+
+	public void generateGraph() {
+		if (m_objRoot != null) {
+			m_objRoot.detach();
+		}
+		createSceneGraph();
+
+		// setup content
+		m_boundingVolume = BoundingVolume.createCube(1, m_seed);
+		m_pointCloud = PointCloud.create(m_particleCount, m_partitionedDistribution, m_boundingVolume, true);
+
+		m_objTransform.addChild(m_boundingVolume.toNode());
+		m_objTransform.addChild(m_pointCloud.toNode());
+
+		long startTime = System.currentTimeMillis();
+		m_triangles = new DelaunayTriangulation(m_pointCloud);
+
+		long stopTime = System.currentTimeMillis();
+		long elapsedTime = stopTime - startTime;
+		System.out.printf("time: %dms\n", elapsedTime);
+
+		System.out.printf("Triangles generated: %d\n", m_triangles.size());
+		m_objTransform.addChild(m_triangles.toNode(false));
+
+		m_universe.addBranchGraph(m_objRoot);
+	}
+
+	public void export() {
+		try {
+			writeSCAD(m_triangles, m_pointCloud, m_seed, "result");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void writePoint(BufferedWriter out, Point3d point, float scale, int radius, int resolution) throws IOException {
@@ -178,7 +192,7 @@ public class VoronoiApp extends JFrame implements KeyListener {
 		out.write(String.format("cylinder(h = %f, r1 = %d, r2 = %d, center = false, $fn = %d);\n", r*scale, radius, radius, resolution));
 	}
 
-	private void exportSCAD(DelaunayTriangulation triangles, PointCloud points, long seed, String namePrefix) throws IOException {
+	private void writeSCAD(DelaunayTriangulation triangles, PointCloud points, long seed, String namePrefix) throws IOException {
 		BufferedWriter out = null;
 		try {
 //			int nameSuffix = (int) ((new java.util.Date()).getTime()/1000);
@@ -235,23 +249,6 @@ public class VoronoiApp extends JFrame implements KeyListener {
 			new VoronoiApp().setVisible(true);
 		} catch (IOException ex) {
 			ex.printStackTrace();
-		}
-	}
-
-	@Override
-	public void keyTyped(KeyEvent ke) {
-		//do nothing yet
-	}
-
-	@Override
-	public void keyPressed(KeyEvent ke) {
-		//do nothing yet
-	}
-
-	@Override
-	public void keyReleased(KeyEvent ke) {
-		if (ke.getKeyCode() == KeyEvent.VK_ESCAPE) {
-			System.exit(0);
 		}
 	}
 }

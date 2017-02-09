@@ -3,59 +3,89 @@ package ch.suterra.art.voronoi.ui;
 import ch.suterra.art.voronoi.VoronoiApp;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 /**
  * Created by yannick on 08.02.17.
  */
 public class VoronoiConfig extends JPanel {
-	public static final int COLUMNS = 1;
-	public static final int ROWS = 3;
-	private static final int TF_COLS = 10;
-	private static int inset = 5;
-	private static final Insets INSETS = new Insets(inset, inset, inset, inset);
-	private static final Insets EXTRA_INSETS = new Insets(inset, inset, inset, 8 * inset);
-	private static final int EB_GAP = 10;
+	private final JLabel m_particleCountLabel;
 
-	public VoronoiConfig(VoronoiApp app) {
-//		setLayout(new GridLayout(0, 2));
-//		add(new JLabel("Particle Count:"));
-//		JSlider particleCountSlider = new JSlider(JSlider.HORIZONTAL, 1, 100, 10);
-//		add(particleCountSlider);
+	public VoronoiConfig(final VoronoiApp app) {
+		setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
 
-		super(new GridBagLayout());
-		setBorder(BorderFactory.createEmptyBorder(EB_GAP, EB_GAP, EB_GAP, EB_GAP));
-		for (int r = 0; r < ROWS; r++) {
-			for (int c = 0; c < COLUMNS; c++) {
-				addComponent(r, c);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		c.insets = new Insets(0,10,0,0);  //top padding
+		add(new JLabel("Particle Count:"), c);
+
+		m_particleCountLabel = new JLabel("10");
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		c.insets = new Insets(0,10,0,0);  //top padding
+		add(m_particleCountLabel, c);
+
+		JSlider particleCount = new JSlider(JSlider.HORIZONTAL, 1, 100, app.getParticleCount());
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 1;
+		c.gridwidth = 2;
+		c.insets = new Insets(0,0,0,0);
+		add(particleCount, c);
+
+		particleCount.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				JSlider source = (JSlider)e.getSource();
+				int particleCount = (int) source.getValue();
+				m_particleCountLabel.setText(String.valueOf(particleCount));
+				if (!source.getValueIsAdjusting()) {
+					app.setParticleCount(particleCount);
+					app.generateGraph();
+				}
 			}
-		}
-	}
+		});
 
-	private void addComponent(int r, int c) {
-		int count = 1 + r * COLUMNS + c;
-		JLabel label = new JLabel("label " + count);
-		JTextField textField = new JTextField("value " + count, TF_COLS);
+		JButton generateButton = new JButton("Generate new structure");
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 2;
+		c.gridwidth = 3;
+		c.insets = new Insets(10,0,0,0);
+		generateButton.setMnemonic(KeyEvent.VK_G);
+		add(generateButton, c);
 
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.gridx = 2 * c;
-		gbc.gridy = r;
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.fill = GridBagConstraints.BOTH;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.insets = INSETS;
-		gbc.weightx = 0.1;
-		gbc.weighty = 1.0;
-		add(label, gbc);
+		generateButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				app.generateSeed(null);
+				app.generateGraph();
+			}
+		});
 
-		gbc.gridx++;
-		gbc.anchor = GridBagConstraints.EAST;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.weightx = 1.0;
-		if (c != COLUMNS - 1) {
-			gbc.insets = EXTRA_INSETS;
-		}
-		add(textField, gbc);
+		JButton exportButton = new JButton("Export SCAD");
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 3;
+		c.gridwidth = 3;
+		c.insets = new Insets(0,0,0,0);
+		exportButton.setMnemonic(KeyEvent.VK_E);
+		add(exportButton, c);
+
+		exportButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				app.export();
+			}
+		});
 	}
 }

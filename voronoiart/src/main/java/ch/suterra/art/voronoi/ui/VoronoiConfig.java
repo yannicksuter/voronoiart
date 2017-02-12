@@ -57,10 +57,41 @@ public class VoronoiConfig extends JPanel {
 			}
 		});
 
-		JButton generateButton = new JButton("Generate new structure");
+		JCheckBox particlePartitioning = new JCheckBox("Use particle partitioning", true);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 2;
+		c.gridwidth = 3;
+		c.insets = new Insets(0,0,0,10);
+		add(particlePartitioning, c);
+
+		particlePartitioning.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				//todo
+			}
+		});
+
+		JCheckBox showVoronoiCells = new JCheckBox("Show voronoi cells", false);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 3;
+		c.gridwidth = 3;
+		c.insets = new Insets(0,0,0,10);
+		add(showVoronoiCells, c);
+
+		showVoronoiCells.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				//todo
+			}
+		});
+
+
+		JButton generateButton = new JButton("Generate new structure");
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 4;
 		c.gridwidth = 3;
 		c.insets = new Insets(10,0,0,0);
 		generateButton.setMnemonic(KeyEvent.VK_G);
@@ -76,7 +107,7 @@ public class VoronoiConfig extends JPanel {
 		JButton exportButton = new JButton("Export SCAD");
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
-		c.gridy = 3;
+		c.gridy = 5;
 		c.gridwidth = 3;
 		c.insets = new Insets(0,0,0,0);
 		exportButton.setMnemonic(KeyEvent.VK_E);

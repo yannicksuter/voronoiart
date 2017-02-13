@@ -57,7 +57,7 @@ public class VoronoiConfig extends JPanel {
 			}
 		});
 
-		JCheckBox particlePartitioning = new JCheckBox("Use particle partitioning", true);
+		JCheckBox particlePartitioning = new JCheckBox("Use particle partitioning", app.isParticlePartitioning());
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 2;
@@ -68,11 +68,12 @@ public class VoronoiConfig extends JPanel {
 		particlePartitioning.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				//todo
+				JCheckBox source = (JCheckBox)e.getSource();
+				app.useParticlePartitioning(source.isSelected());
 			}
 		});
 
-		JCheckBox showVoronoiCells = new JCheckBox("Show voronoi cells", false);
+		JCheckBox showVoronoiCells = new JCheckBox("Show voronoi cells", app.isVoronoiRendered());
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 3;
@@ -83,10 +84,10 @@ public class VoronoiConfig extends JPanel {
 		showVoronoiCells.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				//todo
+				JCheckBox source = (JCheckBox)e.getSource();
+				app.showVoronoi(source.isSelected());
 			}
 		});
-
 
 		JButton generateButton = new JButton("Generate new structure");
 		c.fill = GridBagConstraints.HORIZONTAL;

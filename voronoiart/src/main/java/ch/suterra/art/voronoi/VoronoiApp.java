@@ -39,6 +39,7 @@ public class VoronoiApp extends JFrame {
 
 	private int m_particleCount = 10;
 	private boolean m_partitionedDistribution = true;
+	private boolean	m_renderVoronoiCells = false;
 
 	public VoronoiApp() throws IOException {
 		configureWindow();
@@ -250,5 +251,23 @@ public class VoronoiApp extends JFrame {
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
+	}
+
+	public boolean isParticlePartitioning() {
+		return m_partitionedDistribution;
+	}
+
+	public void useParticlePartitioning(boolean val) {
+		m_partitionedDistribution = val;
+		generateGraph();
+	}
+
+	public boolean isVoronoiRendered() {
+		return m_renderVoronoiCells;
+	}
+
+	public void showVoronoi(boolean val) {
+		m_renderVoronoiCells = val;
+		generateGraph();
 	}
 }

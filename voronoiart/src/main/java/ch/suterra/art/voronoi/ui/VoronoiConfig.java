@@ -81,13 +81,22 @@ public class VoronoiConfig extends JPanel {
 		c.insets = new Insets(0,0,0,10);
 		add(showVoronoiCells, c);
 
-		showVoronoiCells.addChangeListener(new ChangeListener() {
+//		showVoronoiCells.addChangeListener(new ChangeListener() {
+//			@Override
+//			public void stateChanged(ChangeEvent e) {
+//				JCheckBox source = (JCheckBox)e.getSource();
+//				app.showVoronoi(source.isSelected());
+//			}
+//		});
+
+		showVoronoiCells.addActionListener(new ActionListener() {
 			@Override
-			public void stateChanged(ChangeEvent e) {
-				JCheckBox source = (JCheckBox)e.getSource();
-				app.showVoronoi(source.isSelected());
+			public void actionPerformed(ActionEvent e) {
+				AbstractButton source = (AbstractButton) e.getSource();
+				app.showVoronoi(source.getModel().isSelected());
 			}
 		});
+
 
 		JButton generateButton = new JButton("Generate new structure");
 		c.fill = GridBagConstraints.HORIZONTAL;

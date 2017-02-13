@@ -9,6 +9,7 @@ import ch.suterra.art.voronoi.ui.VoronoiConfig;
 import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
 import com.sun.j3d.utils.behaviors.mouse.MouseTranslate;
 import com.sun.j3d.utils.behaviors.mouse.MouseZoom;
+import com.sun.j3d.utils.geometry.Sphere;
 import com.sun.j3d.utils.universe.SimpleUniverse;
 
 import javax.media.j3d.*;
@@ -16,6 +17,7 @@ import javax.swing.*;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
+import javax.vecmath.Vector3f;
 import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -158,6 +160,28 @@ public class VoronoiApp extends JFrame {
 
 		System.out.printf("Triangles generated: %d\n", m_triangles.size());
 		m_objTransform.addChild(m_triangles.toNode(false));
+
+		if (m_renderVoronoiCells) {
+			BranchGroup voronoiCenters = new BranchGroup();
+
+			Appearance app = new Appearance();
+			Material mat = new Material();
+			mat.setDiffuseColor(1,1,0,1);
+			app.setMaterial(mat);
+
+			for (int i=0; i<m_triangles.size(); i++) {
+				Triangle t = m_triangles.get(i);
+
+				Sphere sphere = new Sphere(.005f, 1, 5, app);
+				TransformGroup tg = new TransformGroup();
+				Transform3D transform = new Transform3D();
+				transform.setTranslation(new Vector3f(t.m_circumpherence.m_center));
+				tg.setTransform(transform);
+				tg.addChild(sphere);
+				voronoiCenters.addChild(tg);
+			}
+			m_objTransform.addChild(voronoiCenters);
+		}
 
 		m_universe.addBranchGraph(m_objRoot);
 	}

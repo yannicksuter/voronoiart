@@ -16,6 +16,11 @@ public class Triangle {
 	public int m_id3;
 	public Point3d m_p3;
 
+	// neighbours
+	public Triangle m_n1; // P1-P2
+	public Triangle m_n2; // P2-P3
+	public Triangle m_n3; // P3-P1
+
 	public Triangle(int triangleId, int id1, Point3d p1, int id2, Point3d p2, int id3, Point3d p3) {
 		m_id = triangleId;
 		m_id1 = id1;

@@ -27,6 +27,7 @@ public class Writer {
 
         out.write(String.format("translate([%f,%f,%f])", p0.x * scale, p0.y * scale, p0.z * scale));
         out.write("\n\t");
+        // todo: fix NaN issue with some exported values
         out.write(String.format("rotate([%f,%f,%f])", -90 + Math.toDegrees(alpha), Math.toDegrees(beta), 0.f));
         out.write("\n\t");
         out.write(String.format("cylinder(h = %f, r1 = %d, r2 = %d, center = false, $fn = %d);\n", r*scale, radius, radius, resolution));

@@ -4,6 +4,7 @@ import ch.suterra.art.scad.Writer;
 import ch.suterra.art.voronoi.assets.*;
 
 import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,7 +19,7 @@ import java.util.Set;
 public class Generator {
     private long m_seed;
 
-    int m_particleCount = 10;
+    int m_particleCount = 1;
     boolean m_partitionedDistribution = true;
 
     BoundingVolume m_boundingVolume;
@@ -35,12 +36,19 @@ public class Generator {
         m_pointCloud = PointCloud.create(m_particleCount, m_partitionedDistribution, m_boundingVolume, true);
         m_triangles = new DelaunayTriangulation(m_pointCloud);
 
-        findNeighbours(m_triangles);
-        m_connections = new VoronoiConnections(m_triangles);
+        PointCloud centerPoints = new PointCloud();
+        for (int i = 0; i < m_triangles.size(); i++) {
+            Triangle triangle = m_triangles.get(i);
+            centerPoints.add(triangle.m_circumpherence.m_center);
+        }
+        DelaunayTriangulation voronoi = new DelaunayTriangulation(centerPoints);
+
+//        findNeighbours(m_triangles);
+//        m_connections = new VoronoiConnections(m_triangles);
 
         long stopTime = System.currentTimeMillis();
 
-        writeSCAD(m_connections, m_triangles, m_pointCloud, m_seed, "vase", stopTime - startTime);
+        writeSCAD(true, m_connections, m_triangles, m_pointCloud, voronoi, m_seed, "vase", stopTime - startTime);
     }
 
     public void initializeSeed(Long s) {
@@ -72,7 +80,7 @@ public class Generator {
             Triangle t = triangles.get(i);
             for (int j=0;  j<triangles.size(); j++) {
                 if (i!=j) {
-                    Triangle n = triangles.get(j);
+                        Triangle n = triangles.get(j);
                     if (isNeighbour(t.m_id1, t.m_id2, n)) {
                         t.m_n1 = n;
                     } else if (isNeighbour(t.m_id2, t.m_id3, n)) {
@@ -85,7 +93,7 @@ public class Generator {
         }
     }
 
-    private void writeSCAD(VoronoiConnections connections, DelaunayTriangulation triangles, PointCloud points, long seed, String namePrefix, long elapsedTime) throws IOException {
+    private void writeSCAD(boolean exportTriangulation, VoronoiConnections connections, DelaunayTriangulation triangles, PointCloud points, DelaunayTriangulation voronoi, long seed, String namePrefix, long elapsedTime) throws IOException {
         BufferedWriter out = null;
         try {
             int nameSuffix = 0;
@@ -100,48 +108,39 @@ public class Generator {
             int resolution = 10;
             float scale = 100;
 
-            if (points != null) {
-                for (int i = 0; i < points.size(); i++) {
-                    Point3d point = points.get(i);
-                    Writer.writePoint(out, point, scale, radius, resolution);
-                }
-            }
+            if (exportTriangulation) {
+                Vector3d yellow = new Vector3d(1,1,0);
+                Vector3d yellow_dark = new Vector3d(.5,.5,0);
+                Vector3d green = new Vector3d(0,1,0);
+                Vector3d green_dark = new Vector3d(0,.5,0);
 
-            if (false) {
-                if (triangles != null) {
-                    int lines = 0;
-                    Set<String> index = new HashSet<String>();
-                    for (int i = 0; i < triangles.size(); i++) {
-                        Triangle triangle = triangles.get(i);
-                        if (!index.contains(String.format("%d-%d", triangle.m_id1, triangle.m_id2)) && !index.contains(String.format("%d-%d", triangle.m_id2, triangle.m_id1))) {
-                            Writer.writeLine(out, triangle.m_p1, triangle.m_p2, scale, radius, resolution);
-                            index.add(String.format("%d-%d", triangle.m_id1, triangle.m_id2));
-                            lines++;
-                        }
-                        if (!index.contains(String.format("%d-%d", triangle.m_id2, triangle.m_id3)) && !index.contains(String.format("%d-%d", triangle.m_id3, triangle.m_id2))) {
-                            Writer.writeLine(out, triangle.m_p2, triangle.m_p3, scale, radius, resolution);
-                            index.add(String.format("%d-%d", triangle.m_id2, triangle.m_id3));
-                            lines++;
-                        }
-                        if (!index.contains(String.format("%d-%d", triangle.m_id3, triangle.m_id1)) && !index.contains(String.format("%d-%d", triangle.m_id1, triangle.m_id3))) {
-                            Writer.writeLine(out, triangle.m_p3, triangle.m_p1, scale, radius, resolution);
-                            index.add(String.format("%d-%d", triangle.m_id3, triangle.m_id1));
-                            lines++;
-                        }
+                if (points != null) {
+                    for (int i = 0; i < points.size(); i++) {
+                        Point3d point = points.get(i);
+                        Writer.writePoint(out, point, scale, radius*2, resolution, yellow_dark);
                     }
-                    System.out.println(String.format("%d lines exported.", lines));
+                }
+
+                if (true && triangles != null) {
+                    Writer.writeTriangles(out, triangles, scale, radius, resolution, yellow, true, green);
+                }
+
+                if (true && voronoi != null) {
+                    Writer.writeTriangles(out, voronoi, scale, radius, resolution, green_dark, false, green);
                 }
             }
 
-            if (triangles != null && connections != null) {
-                for (int i = 0; i < triangles.size(); i++) {
-                    Writer.writePoint(out, triangles.get(i).m_circumpherence.m_center, scale, radius, resolution);
-                }
-                for (Line l : connections.getConnections()) {
-                    Writer.writeLine(out, l.m_t1.m_circumpherence.m_center, l.m_t2.m_circumpherence.m_center, scale, radius, resolution);
-                }
-            }
-
+            // export voronoi
+//            Vector3d red = new Vector3d(1,0,0);
+//            Vector3d blue = new Vector3d(0,0,1);
+//            if (triangles != null && connections != null) {
+//                for (int i = 0; i < triangles.size(); i++) {
+//                    Writer.writePoint(out, triangles.get(i).m_circumpherence.m_center, scale, radius*2, resolution, blue);
+//                }
+//                for (Line l : connections.getConnections()) {
+//                    Writer.writeLine(out, l.m_p1, l.m_p2, scale, radius, resolution, red);
+//                }
+//            }
         }
         catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
